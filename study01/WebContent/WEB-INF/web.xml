@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee 
+		http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+	version="3.1">
+
+	<servlet>
+		<servlet-name>DBCPInit</servlet-name>
+		<servlet-class>jdbc.DBCPInit</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	
+	<jsp-config>
+		<jsp-property-group>
+			<description>모든 JSP 위쪽에 심어지는 header 설정</description>
+			<url-pattern>*.jsp</url-pattern>
+			<page-encoding>UTF-8</page-encoding>
+			<include-prelude>/WEB-INF/layout/common/globalHeader.jsp</include-prelude>
+			<trim-directive-whitespaces>true</trim-directive-whitespaces>
+		</jsp-property-group>
+	</jsp-config>
+	
+	<filter>
+        <filter-name>sitemesh</filter-name>
+        <filter-class>
+            com.opensymphony.module.sitemesh.filter.PageFilter
+        </filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>sitemesh</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    
+    <welcome-file-list>
+	    <welcome-file>index.html</welcome-file>
+	    <welcome-file>index.htm</welcome-file>
+	    <welcome-file>index.jsp</welcome-file>
+  	</welcome-file-list>
+
+</web-app>
