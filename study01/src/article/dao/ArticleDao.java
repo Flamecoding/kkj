@@ -5,8 +5,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import article.model.Article;
@@ -14,82 +15,142 @@ import jdbc.JdbcUtil;
 
 public class ArticleDao {
 
-	private static ArticleDao articleDao = new ArticleDao();
-	public static ArticleDao getInstance() {
-		return articleDao;
-	}
-	
-	private ArticleDao() {}
-	
-	public Article select(Connection conn, int articleId) throws SQLException {
-		PreparedStatement pstmt = null;
+	public Article insert(Connection conn, Article article) throws SQLException {
+		/*PreparedStatement pstmt = null;
+		Statement stmt = null;
 		ResultSet rs = null;
 		try {
-			pstmt = conn.prepareStatement(
-					"select * from article where article_id = ?");
-			pstmt.setInt(1, articleId);
-			rs = pstmt.executeQuery();
-			if (rs.next()) {
-				return makeArticleFromResultSet(rs);
-			} else {
-				return null;
+			pstmt = conn.prepareStatement("insert into article "
+					+ "(writer_id, writer_name, title, regdate, moddate, read_cnt) "
+					+ "values (?,?,?,?,?,0)");
+			pstmt.setString(1, article.getWriter().getId());
+			pstmt.setString(2, article.getWriter().getName());
+			pstmt.setString(3, article.getTitle());
+			pstmt.setTimestamp(4, toTimestamp(article.getRegDate()));
+			pstmt.setTimestamp(5, toTimestamp(article.getModifiedDate()));
+			int insertedCount = pstmt.executeUpdate();
+
+			if (insertedCount > 0) {
+				stmt = conn.createStatement();
+				rs = stmt.executeQuery("select last_insert_id() from article");
+				if (rs.next()) {
+					Integer newNo = rs.getInt(1);
+					return new Article(newNo,
+							article.getWriter(),
+							article.getTitle(),
+							article.getRegDate(),
+							article.getModifiedDate(),
+							0);
+				}
 			}
+			return null;
 		} finally {
 			JdbcUtil.close(rs);
+			JdbcUtil.close(stmt);
 			JdbcUtil.close(pstmt);
-		}
-	}
-	
-	private Article makeArticleFromResultSet(ResultSet rs) throws SQLException {
-		Article article = new Article();
-		article.setId(rs.getInt("article_id"));
-		article.setTitle(rs.getString("article_title"));
-		article.setContent(rs.getString("article_content"));
-		article.setCreatedBy(rs.getString("article_created_by"));
-		article.setCreatedDt(rs.getDate("article_created_dt"));
-		article.setModifiedBy(rs.getString("article_modified_by"));
-		article.setModifiedDt(rs.getDate("article_modified_dt"));
+		}*/
 		
-		return article;
+		return null;
 	}
-	
+
+	private Timestamp toTimestamp(Date date) {
+		return new Timestamp(date.getTime());
+	}
+
 	public int selectCount(Connection conn) throws SQLException {
 		Statement stmt = null;
 		ResultSet rs = null;
 		try {
 			stmt = conn.createStatement();
 			rs = stmt.executeQuery("select count(*) from article");
-			rs.next();
-			return rs.getInt(1);
+			if (rs.next()) {
+				return rs.getInt(1);
+			}
+			return 0;
 		} finally {
 			JdbcUtil.close(rs);
 			JdbcUtil.close(stmt);
 		}
 	}
+
+	public List<Article> select(Connection conn, int startRow, int size) throws SQLException {
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		try {
+			pstmt = conn.prepareStatement("select * from article " +
+					"order by article_id desc limit ?, ?");
+			pstmt.setInt(1, startRow);
+			pstmt.setInt(2, size);
+			rs = pstmt.executeQuery();
+			List<Article> result = new ArrayList<>();
+			while (rs.next()) {
+				result.add(convertArticle(rs));
+			}
+			return result;
+		} finally {
+			JdbcUtil.close(rs);
+			JdbcUtil.close(pstmt);
+		}
+	}
+
+	private Article convertArticle(ResultSet rs) throws SQLException {
+		/*return new Article(rs.getInt("article_no"),
+				new Writer(
+						rs.getString("writer_id"),
+						rs.getString("writer_name")),
+				rs.getString("title"),
+				toDate(rs.getTimestamp("regdate")),
+				toDate(rs.getTimestamp("moddate")),
+				rs.getInt("read_cnt"));*/
+		
+		return new Article(rs.getInt("article_id"),
+				rs.getString("article_title"),
+				rs.getString("article_content"),
+				rs.getString("article_created_by"),
+				toDate(rs.getTimestamp("article_created_dt")));
+	}
+
+	private Date toDate(Timestamp timestamp) {
+		return new Date(timestamp.getTime());
+	}
 	
-	public List<Article> selectList(Connection conn, int firstRow, int endRow) 
-			throws SQLException {
+	public Article selectById(Connection conn, int no) throws SQLException {
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 		try {
 			pstmt = conn.prepareStatement(
-					"select * from article " + 
-					"order by article_id desc limit ?, ?");
-			pstmt.setInt(1, firstRow - 1);
-			pstmt.setInt(2, endRow - firstRow + 1);
+					"select * from article where article_id = ?");
+			pstmt.setInt(1, no);
 			rs = pstmt.executeQuery();
+			Article article = null;
 			if (rs.next()) {
-				List<Article> articleList = new ArrayList<Article>();
-				do {
-					articleList.add(makeArticleFromResultSet(rs));
-				} while (rs.next());
-				return articleList;
-			} else {
-				return Collections.emptyList();
+				article = convertArticle(rs);
 			}
+			return article;
 		} finally {
 			JdbcUtil.close(rs);
 			JdbcUtil.close(pstmt);
+		}
+	}
+	
+	public void increaseReadCount(Connection conn, int no) throws SQLException {
+		try (PreparedStatement pstmt = 
+				conn.prepareStatement(
+						"update article set read_cnt = read_cnt + 1 "+
+						"where article_id = ?")) {
+			pstmt.setInt(1, no);
+			pstmt.executeUpdate();
+		}
+	}
+	
+	public int update(Connection conn, int no, String title) throws SQLException {
+		try (PreparedStatement pstmt = 
+				conn.prepareStatement(
+						"update article set title = ?, moddate = now() "+
+						"where article_id = ?")) {
+			pstmt.setString(1, title);
+			pstmt.setInt(2, no);
+			return pstmt.executeUpdate();
 		}
 	}
 }
