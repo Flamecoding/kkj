@@ -23,11 +23,10 @@
 </head>
 <body>
 <div style="margin-top: 100px;">
-<c:if test="${viewData.isEmpty()}">
-등록된 메시지가 없습니다.
+<c:if test="${articlePage.hasNoArticles()}">
+게시글이 없습니다.
 </c:if>
 
-<c:if test="${!viewData.isEmpty()}">
 <table class="table table-striped">
 	<thead>
 		<tr>
@@ -38,7 +37,7 @@
 		</tr>
 	</thead>
 	<tbody>
-		<c:forEach var="article" items="${viewData.articleList}">
+		<c:forEach var="article" items="${articlePage.content}">
 		<tr>
 			<td>${article.id}</td>
 			<td>${article.title}</td>
@@ -51,12 +50,23 @@
 </hr>
 <div class="text-center">
 	<ul class="pagination">
-	<c:forEach var="pageNum" begin="1" end="${viewData.pageTotalCount}">
+	<c:forEach var="pageNum" begin="${articlePage.startPage}" end="${articlePage.endPage}">
 	<li><a href="noticeList.jsp?page=${pageNum}">${pageNum}</a></li>
 	</c:forEach>
 	</ul>
 </div>
+
+<%-- <c:if test="${articlePage.startPage > 5}">
+<a href="list.do?pageNo=${articlePage.startPage - 5}">[이전]</a>
 </c:if>
+<c:forEach var="pNo" 
+		   begin="${articlePage.startPage}" 
+		   end="${articlePage.endPage}">
+<a href="list.do?pageNo=${pNo}">[${pNo}]</a>
+</c:forEach>
+<c:if test="${articlePage.endPage < articlePage.totalPages}">
+<a href="list.do?pageNo=${articlePage.startPage + 5}">[다음]</a>
+</c:if> --%>
 </div>
 </body>
 </html>

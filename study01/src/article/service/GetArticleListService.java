@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 
-import article.dao.ArticleDao;
+import article.dao.ArticleDao1;
 import article.model.Article;
 import jdbc.JdbcUtil;
 import jdbc.connection.ConnectionProvider;
@@ -27,7 +27,7 @@ public class GetArticleListService {
 		int currentPageNumber = pageNumber;
 		try {
 			conn = ConnectionProvider.getConnection();
-			ArticleDao articleDao = ArticleDao.getInstance();
+			ArticleDao1 articleDao = ArticleDao1.getInstance();
 
 			int articleTotalCount = articleDao.selectCount(conn);
 

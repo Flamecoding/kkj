@@ -1,6 +1,6 @@
 package article.model;
 
-import java.sql.Date;
+import java.util.Date;
 
 public class Article {
 
@@ -11,6 +11,14 @@ public class Article {
 	private Date createdDt;
 	private String modifiedBy;
 	private Date modifiedDt;
+	
+	public Article(Integer id, String title, String content, String createdBy,  Date createdDt) {
+		this.id = id;
+		this.title = title;
+		this.content = content;
+		this.createdBy = createdBy;
+		this.createdDt = createdDt;
+	}
 	
 	public int getId() {
 		return id;
